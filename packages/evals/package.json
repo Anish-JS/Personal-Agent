@@ -1,0 +1,23 @@
+{
+  "name": "@my-agent/evals",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "test": "vitest run",
+    "eval": "tsx src/runner.ts"
+  },
+  "dependencies": {
+    "@my-agent/bot": "workspace:*",
+    "@anthropic-ai/sdk": "^0.40.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.4.0",
+    "tsx": "^4.0.0",
+    "vitest": "^1.0.0"
+  }
+}

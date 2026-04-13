@@ -1,0 +1,36 @@
+name: CI
+on: [pull_request]
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm -r typecheck
+
+      - run: pnpm -r lint
+
+      - run: pnpm -r test
+
+      - name: Run eval suite
+        run: pnpm --filter evals run eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AGENT_ID: ${{ secrets.STAGING_AGENT_ID }}
+        # Only run evals on PRs that touch agent-related code
+        if: >
+          contains(github.event.pull_request.changed_files, 'config/') ||
+          contains(github.event.pull_request.changed_files, 'packages/bot/') ||
+          contains(github.event.pull_request.changed_files, 'packages/evals/')
