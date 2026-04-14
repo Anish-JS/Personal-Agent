@@ -9,7 +9,9 @@
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
     "eval": "pnpm --filter evals run eval",
-    "register-agent": "tsx scripts/register-agent.ts"
+    "register-agent": "tsx scripts/register-agent.ts",
+    "cost-check": "tsx scripts/cost-check.ts",
+    "rebuild-style": "tsx -e \"import('./packages/memory/src/style.ts').then(m => m.rebuildWorkingStyleProfile())\""
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

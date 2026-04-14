@@ -1,5 +1,5 @@
-// Telemetry must be initialized before anything else
-import './telemetry.js';
+// OTel SDK must be initialized before any other import
+import './telemetry-init.js';
 
 import { app } from './slack.js';
 
