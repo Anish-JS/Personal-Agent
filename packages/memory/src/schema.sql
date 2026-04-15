@@ -18,9 +18,9 @@ CREATE TABLE IF NOT EXISTS memories (
   id         BIGSERIAL PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT now(),
   text       TEXT NOT NULL,                 -- Human-readable fact
-  embedding  VECTOR(1536),                  -- For similarity search
+  embedding  VECTOR(1024),                  -- voyage-3-lite outputs 1024-dimensional vectors
   source_id  TEXT,                          -- Session that produced this
-  category   TEXT,                          -- 'fact' | 'preference' | 'style'
+  category   TEXT,                          -- 'fact' | 'preference' | 'correction' | 'pattern' | 'style'
   confidence REAL DEFAULT 1.0
 );
 
