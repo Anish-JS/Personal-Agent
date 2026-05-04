@@ -1,0 +1,48 @@
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 10s
+    send_batch_size: 1000
+
+exporters:
+  # Grafana Cloud — free 50GB/month
+  otlphttp/grafana_traces:
+    endpoint: https://tempo-prod-XX-prod-XX.grafana.net/tempo
+    headers:
+      authorization: "Basic ${GRAFANA_OTLP_TOKEN}"
+
+  loki/grafana_logs:
+    endpoint: https://logs-prod-XX.grafana.net/loki/api/v1/push
+    headers:
+      authorization: "Basic ${GRAFANA_LOKI_TOKEN}"
+
+  prometheusremotewrite/grafana_metrics:
+    endpoint: https://prometheus-prod-XX.grafana.net/api/prom/push
+    headers:
+      authorization: "Basic ${GRAFANA_METRICS_TOKEN}"
+
+  # Sentry — free 5k errors/month
+  otlphttp/sentry:
+    endpoint: https://o0.ingest.sentry.io/api/${SENTRY_PROJECT_ID}/envelope/
+    headers:
+      x-sentry-auth: "Sentry sentry_version=7, sentry_key=${SENTRY_KEY}"
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlphttp/grafana_traces, otlphttp/sentry]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheusremotewrite/grafana_metrics]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [loki/grafana_logs]
