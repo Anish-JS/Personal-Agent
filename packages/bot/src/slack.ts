@@ -1,16 +1,7 @@
 import { App } from '@slack/bolt';
 import { rateLimitMiddleware, recordFeedback } from './middleware.js';
-
-// Lazy import — session module added in Phase 3
-let _runSession: ((msg: string, ts: string) => Promise<string>) | null = null;
-
-async function getRunSession() {
-  if (!_runSession) {
-    const mod = await import('./session.js');
-    _runSession = mod.runSession;
-  }
-  return _runSession;
-}
+import { runSession } from './session.js';
+import { enqueue } from './dlq.js';
 
 export const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -48,7 +39,6 @@ app.event('message', async ({ event, client }) => {
   }
 
   try {
-    const runSession = await getRunSession();
     const reply = await runSession(text, ts);
 
     await client.chat.postMessage({
@@ -59,10 +49,18 @@ app.event('message', async ({ event, client }) => {
     });
   } catch (err) {
     console.error({ err, session_ts: ts }, 'session failed');
+    // Enqueue for retry — DLQ retrier runs every 5 min
+    await enqueue({
+      user_message: text,
+      slack_channel: channel,
+      slack_thread_ts: threadTs,
+      error: String(err),
+      attempt: 1,
+    });
     await client.chat.postMessage({
       channel,
       thread_ts: threadTs,
-      text: "Something went wrong — I've logged it and will retry.",
+      text: "Something went wrong — I've queued it for retry.",
     });
   }
 });

@@ -17,10 +17,11 @@ export function rateLimitMiddleware(userId: string): boolean {
   return true;
 }
 
-// Feedback record stub — implemented in Phase 4 with DB
-export async function recordFeedback(_payload: {
+// Delegates to memory writer for DB persistence
+export async function recordFeedback(payload: {
   message_ts: string;
   reaction: '+1' | '-1';
 }): Promise<void> {
-  // Wired to DB in Phase 4
+  const { recordFeedback: dbRecord } = await import('../../memory/src/writer.js');
+  await dbRecord(payload);
 }
