@@ -1,13 +1,14 @@
-// Stub — full OTel init in Phase 5
-// Provides tracer/meter/logger so imports don't break in Phase 2-4
-
 import { trace, metrics } from '@opentelemetry/api';
 import pino from 'pino';
 
+// OTel SDK is initialized in Phase 5 (telemetry-init.ts loaded before this module).
+// The global trace/metrics providers are already registered by the time these are called.
 export const tracer = trace.getTracer('personal-agent');
 export const meter = metrics.getMeter('personal-agent');
 
-export const logger = pino({ level: process.env.LOG_LEVEL ?? 'info' });
+export const logger = pino({
+  level: process.env.LOG_LEVEL ?? 'info',
+});
 
 export function logSession(data: {
   session_id: string;

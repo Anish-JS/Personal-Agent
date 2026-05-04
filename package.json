@@ -8,7 +8,8 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
-    "eval": "pnpm --filter evals run eval"
+    "eval": "pnpm --filter evals run eval",
+    "register-agent": "tsx scripts/register-agent.ts"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
