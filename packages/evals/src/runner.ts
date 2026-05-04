@@ -13,6 +13,9 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const BETA_HEADER = { 'anthropic-beta': 'managed-agents-2026-04-01' };
 const AGENT_ID = process.env.AGENT_ID;
 
+// Max poll attempts: 30 × 10 s cap ≈ 5 minutes per case
+const MAX_POLL_ATTEMPTS = 30;
+
 if (!AGENT_ID) {
   console.error('AGENT_ID environment variable is required');
   process.exit(1);
@@ -33,10 +36,8 @@ async function runEvalSession(input: string): Promise<EvalResult> {
     { headers: BETA_HEADER }
   );
 
-  let attempt = 0;
-  while (true) {
+  for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
     await sleep(Math.min(1000 * 2 ** attempt, 10_000));
-    attempt++;
 
     const result = await (client.beta as any).agents.sessions.retrieve(session.id, {
       headers: BETA_HEADER,
@@ -54,10 +55,11 @@ async function runEvalSession(input: string): Promise<EvalResult> {
       throw new Error(`Session failed: ${result.error ?? 'unknown'}`);
     }
   }
+
+  throw new Error(`Session timed out after ${MAX_POLL_ATTEMPTS} poll attempts`);
 }
 
 function extractToolNames(result: Record<string, unknown>): string[] {
-  // Extract tool names from session event log if available
   const events = (result.events as Array<Record<string, unknown>> | undefined) ?? [];
   return events
     .filter((e) => e.type === 'tool_call')
@@ -87,7 +89,7 @@ function assertCase(testCase: EvalCase, result: EvalResult): string | null {
     }
   }
 
-  return null; // All assertions passed
+  return null;
 }
 
 async function runEvals() {
